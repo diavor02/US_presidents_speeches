@@ -23,16 +23,15 @@ def main():
         corpus.append(v_words_doc)
 
         # There are 7 columns in the table. The id of the entry, the 
-        # president's name, the date of the inaugurational speech, the 
-        # poiltical party of the candidate, the he has been given by historians,
-        # the average sentence length in the speech and the speech complexity 
+        # president's name, the date of the inauguration speech, the 
+        # political party of the candidate, the he has been given by historians,
+        # The average sentence length in the speech and the speech complexity 
         # (see the implementation file for more details).
         new_row = {
             'Id': n,
             'President': president_name,
             'Date': date,
-            'Political_party': str(presidents_df.loc[president_name, 
-                                                     'Political_party']),
+            'Political_party': str(presidents_df.loc[president_name, 'Political_party']),
             'Rank': str(presidents_df.loc[president_name, 'Rank']),
             'Sentence_length': count_mean_words_per_sentence(text),
             'Speech_complexity': word_complexity(v_words_doc),
@@ -42,7 +41,7 @@ def main():
 
     nodes_df = df[['Id', 'President', 'Date']].copy()
     nodes_df['Date'] = (pd.to_datetime(nodes_df['Date'])).dt.year
-    nodes_df.rename(columns={'Date': 'Atribute', 'President': 'Label'}, 
+    nodes_df.rename(columns={'Date': 'Attribute', 'President': 'Label'}, 
                     inplace=True)
 
     cosine_sim = cosine_similarity_matrix(corpus, total_words, len(corpus))
@@ -50,7 +49,7 @@ def main():
 
     edges = []
 
-    # So as not to clutter the netowrok graph, only relevant edges are 
+    # So as not to clutter the network graph, only relevant edges are 
     # displayed. The cosine similarity should be at least 0.25
     threshold = 0.25
 
@@ -65,7 +64,7 @@ def main():
     edges_df.to_csv("gephi_edges.csv", index=False)
     nodes_df.to_csv("gephi_nodes.csv", index=False)
 
-    # The table.csv file will be to create the Tableau dashboards
+    # The purpose of table.csv file is to create the Tableau dashboards
     df.to_csv('table.csv', index=False)
 
     print("\nExecution was successful")
