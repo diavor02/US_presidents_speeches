@@ -4,6 +4,7 @@ from implementation import (
 )
 import pandas as pd
 
+NUMBER_OF_INAUGURATIONAL_SPEECHES = 54
 
 def main():
     presidents_df = pd.read_excel('presidents.xlsx', index_col='President')
@@ -11,7 +12,7 @@ def main():
     corpus = []
     total_words = set()
 
-    for n in range(54):
+    for n in range(NUMBER_OF_INAUGURATIONAL_SPEECHES):
         v_words_doc = []
 
         president_name, date, text = get_speech(n)
