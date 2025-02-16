@@ -27,9 +27,9 @@ The project is organized around two main files:
 <h2>Project Architecture</h2>
 <h3>Data Acquisition and Cleaning</h3>
 
-The script main.py reads a list of U.S. presidents from an Excel file (presidents.xlsx), which was computed using <code>create_pres_table()</code>.
+The script main.py reads a list of U.S. presidents from an Excel file (presidents.xlsx), which was computed using <code>scrape_presidential_rankings()</code>.
 It then retrieves each presidential inaugural speech by calling <code>get_speech(n)</code>.
-The function tokenize_and_clean() is used to clean each speech, removing stopwords and punctuation, and converting words to their base form (lemmatization).
+The function <code>tokenize_and_clean()</code> is used to clean each speech, removing stopwords and punctuation, and converting words to their base form (lemmatization).
 
 <h3>Feature Computation</h3>
 
