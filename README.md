@@ -48,7 +48,7 @@ This project analyzes U.S. presidential inaugural speeches by scraping them from
   <li>Rank: Historical ranking from reference data</li>
   <li>Sentence_length: Average words per sentence</li>
   <li>Speech_complexity: Vocabulary rarity score</li>
-  <li>*Speech_complex_percentage_change: the percentage change in speech complexity for reelected presidents. Note: this feature was latter calculated using excel's features</li>
+  <li>*Speech_complex_percentage_change: the percentage change in speech complexity for reelected presidents. Note: this column was later calculated using Excel's built-in features</li>
 </ul>
 
 <h4>Gephi Files</h4>
