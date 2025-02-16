@@ -37,7 +37,7 @@ This project analyzes U.S. presidential inaugural speeches by scraping them from
   <li>Aggregates linguistic metrics</li>
   <li>Exports structured data for visualization tools</li>
 </ul>
-<br>
+
 <h3>Output files</h3>
 <h4>Tableau files</h4>
 1) <code>Tableau_data.csv</code> features:
@@ -92,7 +92,7 @@ This project analyzes U.S. presidential inaugural speeches by scraping them from
 
 <div align="center">
   <img src="network_graph.png" alt="" style="display: block; margin: 0 auto; width: 2000px; max-width: 100%; height: auto;">
-  <p> fig. 4: the network graph </p>
+  <p> fig. 1: the network graph </p>
 </div>
 
 <h4>Main takeaways:</h4>
