@@ -8,208 +8,345 @@ import requests
 import pandas as pd
 import numpy as np
 
-
-# Stop words are common English words that provide little to no context about
-# the document they're part of. It is easier to exclude them from the analysis
-# altogether.
-stop_words = set(stopwords.words('english'))
-
-
-# The lemmatizer is used for reducing words to their base form
-lemmatizer = WordNetLemmatizer()
-
-
-# The unigram_freq.csv file contains the counts of the 333,333 most
-# commonly-used single words on the English language web, as derived from the
-# Google Web Trillion Word Corpus.
-# Source: "https://www.kaggle.com/datasets/rtatman/english-word-frequency"
-df_freq = pd.read_csv('unigram_freq.csv')
-
-
-headers = {
+# Configuration Constants
+LINK_TO_HISTORICAL_RANKINGS = "https://en.wikipedia.org/wiki/Historical_rankings_of_presidents_of_the_United_States"
+WORD_FREQUENCY_FILE = 'unigram_freq.csv'
+HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
     )
 }
 
+# NLP Initialization
+stop_words = set(stopwords.words('english'))  # Standard English stopwords from NLTK
+lemmatizer = WordNetLemmatizer()  # WordNet-based lemmatization instance
 
-# Function name: tokenize(text)
-# Parameters: the input text
-# Description: The regex ensures words, numbers, and standalone dashes are
-#              treated as separate tokens. This step is necessary because no
-#              numbers or compound hyphenated words are present in the
-#              unigram_freq table.
-# Effects: Transforms the input text into tokens
-def tokenize(text):
-    tokenizer = RegexpTokenizer(r'\b\w+\b|[-]')
+# Load lexical frequency data (Google Web Corpus subset)
+try:
+    df_freq = pd.read_csv(WORD_FREQUENCY_FILE)
+except FileNotFoundError:
+    raise SystemExit(f"Critical Error: Required word frequency file '{WORD_FREQUENCY_FILE}' not found.")
+
+
+def tokenize(text: str) -> list[str]:
+    """
+    Tokenizes text into linguistic units while preserving hyphenated words.
+
+    Args:
+        text (str): Input text to process
+
+    Returns:
+        list[str]: Tokens maintaining original hyphenation, excluding punctuation
+        and whitespace. Matches tokenization scheme of reference frequency corpus.
+
+    Example:
+        >>> tokenize("State-of-the-art tokenization.")
+        ['State', 'of', 'the', 'art', 'tokenization']
+    """
+    tokenizer = RegexpTokenizer(r'\b[\w-]+\b')
     return tokenizer.tokenize(text)
 
 
-# Function name: tokenize_and_clean(text, stop_words=stop_words, 
-#                                   lemmatizer=lemmatizer)
-# Parameters: the input text, stop_words (defined above as
-#             set(stopwords.words('english')) using the stopwords module from
-#             nltk corpus) and lemmatizer (defined as WordNetLemmatizer()).
-# Description: The text gets cleaned up and lemmatized. All words are
-#              converted to lowercase. Stop words and punctuation marks are
-#              eliminated.
-# Effects: Returns the input text as a list of tokens
-def tokenize_and_clean(text, stop_words=stop_words, lemmatizer=lemmatizer):
+def tokenize_and_clean(
+    text: str,
+    stop_words: set = stop_words,
+    lemmatizer: WordNetLemmatizer = lemmatizer
+) -> list[str]:
+    """
+    Executes full text normalization pipeline for linguistic analysis.
+
+    Processing Steps:
+    1. Case normalization to lowercase
+    2. Tokenization preserving meaningful hyphens
+    3. Removal of stopwords, punctuation, and numeric tokens
+    4. Lemmatization to canonical dictionary forms
+
+    Args:
+        text (str): Raw input text
+        stop_words (set): Exclusion word set (default: NLTK English stopwords)
+        lemmatizer (WordNetLemmatizer): Text normalization instance
+
+    Returns:
+        list[str]: Cleaned tokens ready for feature extraction
+
+    Example:
+        >>> tokenize_and_clean("The 3 quickest foxes' jumps.")
+        ['quick', 'fox', 'jump']
+    """
     text = text.lower()
     tokens = tokenize(text)
-    tokens = [
+    return [
         lemmatizer.lemmatize(token) for token in tokens
-        if token not in stop_words and token not in string.punctuation
-        and not re.match(r'^\d+$', token)
+        if token not in stop_words
+        and token not in string.punctuation
+        and not token.isdigit()
     ]
-    return tokens
 
 
-# Function name: count_words(text)
-# Parameters: the input text/speech
-# Description: Creates a list of words.
-# Effects: Returns the number of words. The function will be useful later in
-#          count_mean_words_per_sentence(text).
-def count_words(text):
-    text = text.strip()
-    words = re.findall(r'\b\w+\b', text)
-    return len(words)
+def count_words(text: str) -> int:
+    """
+    Computes word count using robust word boundary detection.
+
+    Args:
+        text (str): Input text for analysis
+
+    Returns:
+        int: Count of word tokens in text
+
+    Note:
+        Uses regex word boundary matching for consistent token counting
+    """
+    return len(re.findall(r'\b\w+\b', text.strip()))
 
 
-# Function name: count_mean_words_per_sentence(text)
-# Parameters: the input text/speech
-# Description: Calculates how many sentences are in the input text. Then it
-#              divides the total number of words by the total number of
-#              sentences.
-# Effects: Returns the average number of words per sentence.
-def count_mean_words_per_sentence(text):
-    sentences = re.split(r'[.?!;]', text)
-    num_sentences = len([s for s in sentences if s.strip()])
-    if num_sentences == 0:
-        return 0
-    return count_words(text) / num_sentences
+def count_mean_words_per_sentence(text: str) -> float:
+    """
+    Calculates average sentence length in words.
+
+    Args:
+        text (str): Input text to analyze
+
+    Returns:
+        float: Mean words per sentence. Returns 0.0 for empty input.
+
+    Note:
+        Sentence segmentation uses [.?!;] as boundary markers
+    """
+    sentences = [s.strip() for s in re.split(r'[.?!;]', text) if s.strip()]
+    return count_words(text) / len(sentences) if sentences else 0.0
 
 
-# Function name: word_complexity(v_words, df=df_freq)
-# Parameters: a list of words and the word frequency table
-# Description: The complexity of a speech is defined by the following formula:
-#              the sum of 1 / the frequency of each word in the speech. The
-#              relationship is not linear, giving rarer words a higher score.
-# Effects: Returns the speech complexity as defined above.
-def word_complexity(v_words, df=df_freq):
-    complexity = 0
-    for word in v_words:
-        row = df[df['word'] == word]
-        if not row.empty:
-            value = int(row.iloc[0, 1])
-            if value > 0:
-                complexity += 1 / value
+def calculate_vocabulary_complexity(
+    words: list[str], 
+    freq_df: pd.DataFrame = df_freq
+) -> float:
+    """
+    Computes lexical sophistication score based on word frequency rarity.
+
+    Args:
+        words (list[str]): Preprocessed tokens from text
+        freq_df (pd.DataFrame): Frequency data with 'word' and 'count' columns
+
+    Returns:
+        float: Complexity metric where lower-frequency words contribute higher scores
+        Formula: Σ(1 / frequency_count) for each recognized word
+
+    Note:
+        Unrecognized words (missing from freq_df) contribute 0 to the score
+    """
+    complexity = 0.0
+    for word in words:
+        freq = freq_df.loc[freq_df['word'] == word, 'count']
+        if not freq.empty and (count := int(freq.iloc[0])) > 0:
+            complexity += 1 / count
     return complexity
 
 
-# Function name: get_speech(n, headers=headers)
-# Parameters: n (the current inaugural address) and the user agent header
-# Description: The purpose of this function is to scrape the presidents'
-#              speeches and other relevant information, like the president's
-#              name and the date of the speech.
-# Effects: Returns the information mentioned above.
-def get_speech(n, headers=headers):
-    link = f"https://www.presidency.ucsb.edu/documents/inaugural-address-{n}"
-    page = requests.get(link, headers=headers)
+def fetch_inaugural_address(
+    address_id: int, 
+    headers: dict = HEADERS
+) -> tuple[str, str, str]:
+    """
+    Retrieves presidential inaugural address text from UCSB Presidency Project.
 
-    soup = BeautifulSoup(page.content, "html.parser")
+    Args:
+        address_id (int): Unique identifier for inaugural address
+        headers (dict): HTTP headers for request (default: configured headers)
 
-    # president's name
-    h3_tags = soup.find_all('h3')
-    a_tag = h3_tags[0].find('a')
-    president_name = a_tag.text
+    Returns:
+        tuple[str, str, str]:
+            - President's full name
+            - Inauguration date (formatted string)
+            - Complete address text
 
-    # date
-    div1 = soup.find_all('div', class_='field-docs-start-date-time')
-    date = div1[0].find('span').text
+    Raises:
+        requests.HTTPError: For non-200 response status
+        ValueError: If required page elements are missing
 
-    # speech
-    div2 = soup.find_all('div', class_='field-docs-content')
-    paragraphs = div2[0].find_all('p')
-    pars = [p.get_text(strip=True) for p in paragraphs]
-    text = " ".join(pars)
-    return president_name, date, text
+    Note:
+        Relies on consistent page structure from UCSB Presidency Project
+    """
+    url = f"https://www.presidency.ucsb.edu/documents/inaugural-address-{address_id}"
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.content, "html.parser")
+    
+    try:
+        president = soup.find('h3').find('a').text.strip()
+        date = soup.find('div', class_='field-docs-start-date-time').find('span').text.strip()
+        speech_paragraphs = [p.get_text(strip=True) for p in 
+                           soup.find('div', class_='field-docs-content').find_all('p')]
+    except AttributeError as e:
+        raise ValueError("Unexpected page structure") from e
+
+    return president, date, " ".join(speech_paragraphs)
 
 
-# Function name: cosine_similarity_matrix(corpus, total_words, num_docs)
-# Parameters: the corpus (representing the tokens for each speech),
-#             total_words (representing a set of all the tokens present in the
-#             inaugural speeches), and num_docs (the number of documents
-#             analyzed, in this case, 54).
-# Description: The function is divided into two parts: it first calculates the
-#              TF-IDF matrix, and then uses it to compute the cosine similarity
-#              matrix.
-def cosine_similarity_matrix(corpus, total_words, num_docs):
+def create_gephi_tables(
+    df: pd.DataFrame, 
+    corpus: list[list[list[str]]], 
+    total_words: set
+) -> None:
+    """
+    Generates node and edge tables for network visualization in Gephi.
+
+    Args:
+        df (pd.DataFrame): Presidential metadata DataFrame
+        corpus (list): Tokenized documents for similarity calculation
+        total_words (set): Complete vocabulary across all documents
+
+    Produces:
+        - gephi_nodes.csv: Node attributes with president/year information
+        - gephi_edges.csv: Weighted edges based on cosine similarity ≥0.25
+    """
+    nodes_df = df[['Id', 'President', 'Date']].copy()
+    nodes_df['Date'] = pd.to_datetime(nodes_df['Date']).dt.year
+    nodes_df.rename(columns={'Date': 'Attribute', 'President': 'Label'}, inplace=True)
+
+    cosine_sim = cosine_similarity_matrix(corpus, total_words, len(corpus))
+
+    edges = []
+    threshold = 0.25  # Minimum similarity for edge inclusion
+
+    for i in range(cosine_sim.shape[0]):
+        for j in range(i + 1, cosine_sim.shape[1]):
+            if cosine_sim[i, j] > threshold:
+                edges.append((i, j, cosine_sim[i, j]))
+
+    edges_df = pd.DataFrame(edges, columns=["Source", "Target", "Weight"])
+    edges_df.to_csv("gephi_edges.csv", index=False)
+    nodes_df.to_csv("gephi_nodes.csv", index=False)
+
+
+def create_tfidf_matrix(
+    total_words: int, 
+    num_docs: int, 
+    corpus: list[list[list[str]]]
+) -> np.ndarray:
+    """
+    Constructs TF-IDF matrix from document collection.
+
+    Args:
+        total_words (int): Size of combined vocabulary
+        num_docs (int): Number of documents in corpus
+        corpus (list): Tokenized document collection
+
+    Returns:
+        np.ndarray: TF-IDF matrix with shape (vocab_size, num_docs)
+    """
     tfidf_matrix = np.zeros((len(total_words), num_docs))
 
     for word_idx, word in enumerate(total_words):
-        # Calculate document frequency (df) for the word (i.e., how many times the word appears in the document)
         df = sum(1 for doc in corpus if word in doc)
+        idf = np.log((num_docs + 1) / (df + 1)) + 1  # Scikit-learn's IDF formula
         
-        # Calculate IDF using scikit-learn's formula
-        idf = np.log((num_docs + 1) / (df + 1)) + 1
-        
-        # Calculate TF-IDF for each document
         for doc_idx in range(num_docs):
             tf = corpus[doc_idx].count(word)
             tfidf_matrix[word_idx, doc_idx] = tf * idf
 
-    # Transpose to have documents as rows
-    tfidf_matrix = tfidf_matrix.T
+    return tfidf_matrix
 
-    # Apply L2 normalization to each document vector so as to calculate the dot product between unit vectors
+
+def L2_normalization(
+    tfidf_matrix: np.ndarray, 
+    num_docs: int
+) -> np.ndarray:
+    """
+    Applies L2 normalization to TF-IDF document vectors.
+
+    Args:
+        tfidf_matrix (np.ndarray): Input TF-IDF matrix
+        num_docs (int): Number of documents (matrix rows)
+
+    Returns:
+        np.ndarray: Normalized matrix where each document vector has unit length
+    """
     for doc_idx in range(num_docs):
         norm = np.linalg.norm(tfidf_matrix[doc_idx])
         if norm != 0:
             tfidf_matrix[doc_idx] /= norm
+    return tfidf_matrix
 
-    # Compute cosine similarity matrix
+
+def compute_dot_product(
+    tfidf_matrix: np.ndarray, 
+    num_docs: int
+) -> np.ndarray:
+    """
+    Computes pairwise cosine similarity using normalized dot products.
+
+    Args:
+        tfidf_matrix (np.ndarray): L2-normalized TF-IDF matrix
+        num_docs (int): Number of documents
+
+    Returns:
+        np.ndarray: Square similarity matrix with pairwise cosine scores
+    """
     similarity_matrix = np.zeros((num_docs, num_docs))
     for i in range(num_docs):
         for j in range(num_docs):
-            # Use dot product since vectors are normalized
             similarity_matrix[i, j] = np.dot(tfidf_matrix[i], tfidf_matrix[j])
-    
     return similarity_matrix
 
 
-# Note: This function is not included as part of the code. Instead, it was used 
-#       to create presidents.xlsx file. The reason is I cannot manipulate the 
-#       resulting file directly is beacuse the presidents' name from the two
-#       website webscraped do not corespond (e.g. Joseph R. Biden, Jr. vs 
-#       Joe Biden). As such, the resulting file had to be editted manually.
-# Function name: create_pres_table(headers=headers)
-# Parameters: the user agent header
-# Description: Web mine information about presidents from wikipedia: how they 
-#              are ranked by historians and the political party they come from
-# Effects: Returns the information mentioned above as a pandas dataframe
-def create_pres_table(headers=headers):
+def cosine_similarity_matrix(
+    corpus: list[list[list[str]]], 
+    total_words: set, 
+    num_docs: int
+) -> np.ndarray:
+    """
+    Computes document similarity matrix using TF-IDF and cosine distance.
+
+    Processing Pipeline:
+    1. Construct TF-IDF matrix from document tokens
+    2. Transpose matrix to document-term orientation
+    3. Apply L2 normalization to document vectors
+    4. Compute pairwise dot products for similarity scores
+
+    Args:
+        corpus (list): Tokenized document collection
+        total_words (set): Complete vocabulary across documents
+        num_docs (int): Number of documents to analyze
+
+    Returns:
+        np.ndarray: Symmetric cosine similarity matrix (shape: num_docs x num_docs)
+    """
+    tfidf_matrix = create_tfidf_matrix(total_words, num_docs, corpus)
+    tfidf_matrix = tfidf_matrix.T  # Transpose to document-term format
+    tfidf_matrix = L2_normalization(tfidf_matrix, num_docs)
+    return compute_dot_product(tfidf_matrix, num_docs)
+
+
+def scrape_presidential_rankings(headers: dict = HEADERS) -> pd.DataFrame:
+    """
+    Extracts presidential historical rankings from Wikipedia table.
+
+    Args:
+        headers (dict): HTTP headers for request (default: configured headers)
+
+    Returns:
+        pd.DataFrame: Processed rankings with columns:
+            ['President', 'Rank', 'Political_party']
+
+    Note:
+        Requires manual validation due to potential name discrepancies
+        between data sources. Primarily used for initial reference setup.
+    """
+    response = requests.get(LINK_TO_HISTORICAL_RANKINGS, headers=headers)
+    soup = BeautifulSoup(response.content, "html.parser")
+    
     records = []
-    link = "https://en.wikipedia.org/wiki/Historical_rankings_of_presidents_of_the_United_States"
-    page = requests.get(link, headers=headers)
-    soup = BeautifulSoup(page.content, "html.parser")
-    tables = soup.find_all('table', class_='wikitable')
-    body = tables[0].find('tbody')
-    rows = body.find_all('tr')
-
-    for row in rows:
-        th = row.find_all('th')
-        if th:
-            president = th[0].text.strip()
-            data = row.find_all('td')
-            if len(data) > 0:
-                record = {
+    for row in soup.find('table', class_='wikitable').tbody.find_all('tr'):
+        if (th := row.find('th')):
+            president = th.text.strip()
+            cells = row.find_all('td')
+            if len(cells) >= 3:
+                records.append({
                     'President': president,
-                    'Rank': data[2].text.strip(),
-                    'Political_party': data[1].text.strip()
-                }
-                records.append(record)
-
-    df_pres = pd.DataFrame(records)
-    return df_pres
+                    'Political_party': cells[1].text.strip(),
+                    'Rank': cells[2].text.strip()
+                })
+    
+    return pd.DataFrame(records)
