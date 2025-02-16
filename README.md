@@ -48,8 +48,9 @@ This project analyzes U.S. presidential inaugural speeches by scraping them from
   <li>Rank: Historical ranking from reference data</li>
   <li>Sentence_length: Average words per sentence</li>
   <li>Speech_complexity: Vocabulary rarity score</li>
+  <li>*Speech_complexity_ratio: </li>
 </ul>
-<br>
+
 <h4>Gephi Files</h4>
 1) <code>gephi_nodes.csv</code>:
 <ul>
