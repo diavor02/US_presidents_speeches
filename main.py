@@ -22,19 +22,14 @@ def main():
 
         corpus.append(v_words_doc)
 
-        # There are 7 columns in the table. The id of the entry, the 
-        # president's name, the date of the inauguration speech, the 
-        # political party of the candidate, the he has been given by historians,
-        # The average sentence length in the speech and the speech complexity 
-        # (see the implementation file for more details).
         new_row = {
-            'Id': n,
-            'President': president_name,
-            'Date': date,
-            'Political_party': str(presidents_df.loc[president_name, 'Political_party']),
-            'Rank': str(presidents_df.loc[president_name, 'Rank']),
-            'Sentence_length': count_mean_words_per_sentence(text),
-            'Speech_complexity': word_complexity(v_words_doc),
+            'Id': n, #the id of the entry
+            'President': president_name, #the president's name
+            'Date': date, #the date of the inauguration speech
+            'Political_party': str(presidents_df.loc[president_name, 'Political_party']), #the candidate's political party
+            'Rank': str(presidents_df.loc[president_name, 'Rank']), #the rank given by historians
+            'Sentence_length': count_mean_words_per_sentence(text), #the average sentence length
+            'Speech_complexity': word_complexity(v_words_doc), #speech complexity
         }
         new_row_df = pd.DataFrame([new_row])
         df = pd.concat([df, new_row_df], ignore_index=True)
@@ -64,8 +59,8 @@ def main():
     edges_df.to_csv("gephi_edges.csv", index=False)
     nodes_df.to_csv("gephi_nodes.csv", index=False)
 
-    # The purpose of table.csv file is to create the Tableau dashboards
-    df.to_csv('table.csv', index=False)
+    # The Tableau dashboard will be constructed using create_Tableau_data.csv
+    df.to_csv('create_Tableau_data.csv', index=False)
 
     print("\nExecution was successful")
 
