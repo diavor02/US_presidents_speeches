@@ -1,6 +1,12 @@
-<h1> README </h1>
+<h2>Table of Contents</h2>
+<ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#project-architecture">Project Architecture</a></li>
+  <li><a href="#key-findings">Key findings</a></li>
+</ul>
 
-<p>Note: for more implementation details, all function contracts can be found in <code>implementation.py</code></p>
+
+<h1> Text Analysis of U.S. presidents' inaugural speeches </h1>
 
 <h2>Overview</h2>
 
@@ -85,7 +91,7 @@ The cosine similarity threshold is set at 0.25, so only pairs of speeches with a
     </li>
 </ul>
  
-<h2>Key findings </h2>
+<h2>Key findings</h2>
 <h3>Tableau dashboard (<a href="https://public.tableau.com/views/AnalysisofPresidentialInauguralSpeeches/Dashboard1?:language=enUS&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link">link</a>)</h3>
 <h4>Main takeaways: </h4>
 <ul>
