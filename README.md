@@ -13,76 +13,54 @@
 This project analyzes U.S. presidential inaugural speeches by scraping them from the web, transforming them into numeric features, and exporting data suitable for both network analysis (Gephi) and visualization (Tableau dashboards).
 <br>
 <br>
-The project is organized around two main files:
+<h2>Data Sources</h2>
 <ul>
-    <li>
-        <strong> <code>implementaition.py</code> </strong>: Contains the core functions for tokenizing, cleaning, and computing metrics on the speeches.
-    </li>
-    <li>
-        <strong> <code>main.py</code> </strong>: Coordinates the workflow by calling those functions, building the final data frames, and saving them to CSV.
-    </li>
+  <li>Inaugural Addresses: <a href="https://www.presidency.ucsb.edu/">UCSB Presidency Project</a></li>
+  <li>Historical Rankings: <a href="https://en.wikipedia.org/wiki/Historical_rankings_of_presidents_of_the_United_States">Wikipedia</a></li>
+  <li>Word Frequencies: <a href="https://www.kaggle.com/datasets/rtatman/english-word-frequency">Google Web Corpus (subset)</a></li>
 </ul>
-<br>
 
 <h2>Project Architecture</h2>
-<h3>Data Acquisition and Cleaning</h3>
-
-The script main.py reads a list of U.S. presidents from an Excel file (presidents.xlsx), which was computed using <code>scrape_presidential_rankings()</code>.
-It then retrieves each presidential inaugural speech by calling <code>get_speech(n)</code>.
-The function <code>tokenize_and_clean()</code> is used to clean each speech, removing stopwords and punctuation, and converting words to their base form (lemmatization).
-
-<h3>Feature Computation</h3>
-
-<p>For each speech, the following metrics are computed: </p>
+<h3>Code files</h3>
+1) <code>implementation.py</code> components: 
 <ul>
-    <li>
-        <strong>Average Sentence Length:</strong> Calculated using <code>count_mean_words_per_sentence()</code>.
-    </li>
-    <li>
-        <strong>Speech Complexity:</strong> Calculated with <code>word_complexity()</code>, which sums the reciprocals of each word's frequency in a large word-frequency dataset called <code>unigram_freq.csv</code>.
-
-All speeches (token lists) are stored in a corpus, which is later passed to <code>cosine_similarity_matrix()</code> to compute a document-to-document similarity matrix.
-
-<h3>Thresholding for Network</h3>
-
-The cosine similarity threshold is set at 0.25, so only pairs of speeches with a similarity score above that value are kept as edges in gephi_edges.csv.
-
-<h3>Main Dataframes and Data Storage</h3>
+  <li>Text Processing: Tokenization, lemmatization, and stopword removal</li>
+  <li>Speech Metrics: Sentence length analysis, vocabulary complexity scoring</li>
+  <li>Web Scrapers: Retrieves presidential rankings and inaugural address texts</li>
+  <li>Network Preparation: Generates TF-IDF matrices and cosine similarity calculations</li>
+  <li>Gephi Export: Creates node/edge tables for network visualization</li>
+</ul>
+<br>
+2) <code>main.py</code>:
 <ul>
-    <li>
-        <strong>df</strong>: Collects all the vital information about each inaugural address, including the president's name, date, rank, political party, etc. The information gets stored in <code>table.csv</code> for further analysis in Tableau.
-        <p>Below is a brief description of each column in <code>table.csv</code>:</p>
-        <ul>
-            <li> 
-                <strong>Id</strong>: Numerical identifier for each presidential inaugural speech (0 to 53).
-            </li>
-            <li>
-                <strong>President</strong>: The name of the president who delivered the speech.
-            </li>
-            <li>
-                <strong>Date</strong>: The date of the inaugural address.
-            </li>
-            <li>
-                <strong>Political_party</strong>: The political affiliation of the president, extracted from <code>presidents.xlsx</code>.
-            </li>
-            <li>
-                <strong>Rank</strong>: A historians-assigned rank (from the dataset in <code>presidents.xlsx</code>. Source: American Political Science Association (APSA)).
-            </li>
-            <li>
-                <strong>Sentence_length</strong>: The average number of words per sentence in the speech, computed by <code>count_mean_words_per_sentence()</code>.
-            </li>
-            <li>
-                <strong>Speech_complexity</strong>: The speech complexity, calculated with <code>word_complexity()</code>, indicates how frequently used or rare the speech’s vocabulary is.
-            </li>
-        </ul>
-        <br>
-    </li>
-    <li>
-        <strong>nodes_df</strong>: Contains node information (speech ID, president's name, speech date). The information gets stored in <code>gephi_edges.csv</code> for further Gephi network analysis and visualization.
-    </li>
-    <li>
-        <strong>edges_df</strong>: Contains the edges (pairs of speeches) and their cosine similarity weight. The information gets stored in <code>gephi_nodes.csv</code>, again, for further Gephi network analysis and visualization. 
-    </li>
+  <li>Orchestrates data collection pipeline</li>
+  <li>Aggregates linguistic metrics</li>
+  <li>Exports structured data for visualization tools</li>
+</ul>
+<br>
+<h3>Output files</h3>
+<h4>Tableau files</h4>
+1) <code>Tableau_data.csv</code> features:
+<ul>
+  <li>President: President's full name</li>
+  <li>Date: Inauguration date (YYYY-MM-DD)</li>
+  <li>Political_party: Party affiliation during inauguration</li>
+  <li>Rank: Historical ranking from reference data</li>
+  <li>Sentence_length: Average words per sentence</li>
+  <li>Speech_complexity: Vocabulary rarity score</li>
+</ul>
+<br>
+<h4>Gephi Files</h4>
+1) <code>gephi_nodes.csv</code>:
+<ul>
+  <li>Label: President name</li>
+  <li>Attribute: Inauguration year</li>
+  <li>ID: Unique speech identifier</li>
+</ul>
+2) <code>gephi_edges.csv</code>:
+<ul>
+  <li>Source/Target: Node IDs</li>
+  <li>Weight: Cosine similarity between speeches</li>
 </ul>
  
 <h2>Key findings</h2>
