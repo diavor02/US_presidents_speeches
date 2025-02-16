@@ -28,7 +28,7 @@ The project is organized around two main files:
 <h3>Data Acquisition and Cleaning</h3>
 
 The script main.py reads a list of U.S. presidents from an Excel file (presidents.xlsx), which was computed using <code>create_pres_table()</code>.
-It then retrieves each presidential inaugural speech by calling get_speech(n) from <code>implementation.py</code>.
+It then retrieves each presidential inaugural speech by calling <code>get_speech(n)</code>.
 The function tokenize_and_clean() is used to clean each speech, removing stopwords and punctuation, and converting words to their base form (lemmatization).
 
 <h3>Feature Computation</h3>
@@ -39,13 +39,7 @@ The function tokenize_and_clean() is used to clean each speech, removing stopwor
         <strong>Average Sentence Length:</strong> Calculated using <code>count_mean_words_per_sentence()</code>.
     </li>
     <li>
-        <strong>Speech Complexity:</strong> Calculated with <code>word_complexity()</code>, which sums the reciprocals of each word's frequency in a large word-frequency dataset. The relationship is not linear (see fig. 1), meaning the most frequent words significantly lower the overall speech score.
-    </li>
-</ul>
-<div align="center">
-  <img src="complexity.png" alt="" style="display: block; margin: 0 auto; width: 600px; max-width: 80%; height: auto;">
-  <p> fig. 1</p>
-</div>
+        <strong>Speech Complexity:</strong> Calculated with <code>word_complexity()</code>, which sums the reciprocals of each word's frequency in a large word-frequency dataset called <code>unigram_freq.csv</code>.
 
 All speeches (token lists) are stored in a corpus, which is later passed to <code>cosine_similarity_matrix()</code> to compute a document-to-document similarity matrix.
 
