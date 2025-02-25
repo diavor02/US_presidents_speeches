@@ -13,15 +13,15 @@ def main():
     total_words = set()
 
     for n in range(54):
-        v_words_doc = []
+        words_per_document = []
 
         president_name, date, text = fetch_inaugural_address(n)
         tokens = tokenize_and_clean(text)
 
-        v_words_doc.extend(tokens)
+        words_per_document.extend(tokens)
         total_words.update(tokens)
 
-        corpus.append(v_words_doc)
+        corpus.append(words_per_document)
 
         new_row = {
             'Id': n,                                                                      #the id of the entry
@@ -30,7 +30,7 @@ def main():
             'Political_party': str(presidents_df.loc[president_name, 'Political_party']), #the candidate's political party
             'Rank': str(presidents_df.loc[president_name, 'Rank']),                       #the rank given by historians
             'Sentence_length': count_mean_words_per_sentence(text),                       #the average sentence length
-            'Speech_complexity': calculate_vocabulary_complexity(v_words_doc),            #speech complexity
+            'Speech_complexity': calculate_vocabulary_complexity(words_per_document),            #speech complexity
         }
 
         new_row_df = pd.DataFrame([new_row])
