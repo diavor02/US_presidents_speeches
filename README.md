@@ -19,7 +19,7 @@ This project analyzes U.S. presidential inaugural speeches by scraping them from
   <li>Historical Rankings: <a href="https://en.wikipedia.org/wiki/Historical_rankings_of_presidents_of_the_United_States">Wikipedia</a></li>
   <li>Word Frequencies: <a href="https://www.kaggle.com/datasets/rtatman/english-word-frequency">Google Web Corpus (subset)</a></li>
 </ul>
-
+<br>
 <h2>Project Architecture</h2>
 <h3>Code files</h3>
 1) <code>implementation.py</code> components: 
@@ -37,7 +37,7 @@ This project analyzes U.S. presidential inaugural speeches by scraping them from
   <li>Aggregates linguistic metrics</li>
   <li>Exports structured data for visualization tools</li>
 </ul>
-
+<br>
 <h3>Output files</h3>
 <h4>Tableau files</h4>
 1) <code>Tableau_data.csv</code> features:
@@ -46,7 +46,7 @@ This project analyzes U.S. presidential inaugural speeches by scraping them from
   <li>Date: Inauguration date (YYYY-MM-DD)</li>
   <li>Political_party: Party affiliation during inauguration</li>
   <li>Rank: Historical ranking from reference data</li>
-  <li>Sentence_length: Average words per sentence</li>
+  <li>Sentence_length: Average number of words per sentence</li>
   <li>Speech_complexity: Vocabulary rarity score</li>
   <li>*Speech_complex_percentage_change: the percentage change in speech complexity for reelected presidents. Note: this column was later calculated using Excel's built-in features</li>
 </ul>
@@ -63,7 +63,7 @@ This project analyzes U.S. presidential inaugural speeches by scraping them from
   <li>Source/Target: Node IDs</li>
   <li>Weight: Cosine similarity between speeches</li>
 </ul>
- 
+<br>
 <h2>Key findings</h2>
 <h3>Tableau dashboard (<a href="https://public.tableau.com/views/AnalysisofPresidentialInauguralSpeeches/Dashboard1?:language=enUS&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link">link</a>)</h3>
 <h4>Main takeaways: </h4>
