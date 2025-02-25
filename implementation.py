@@ -25,9 +25,11 @@ lemmatizer = WordNetLemmatizer()  # WordNet-based lemmatization instance
 # Load lexical frequency data (Google Web Corpus subset)
 df_freq = pd.read_csv(WORD_FREQUENCY_FILE)
 
-def tokenize(text: str) -> list[str]:
+
+
+def split_words(text: str) -> list[str]:
     """
-    Tokenizes text into linguistic units while preserving hyphenated words.
+    Splits text into individual words while breaking apart hyphenated compounds.
 
     Args:
         text (str): Input text to process
@@ -37,7 +39,7 @@ def tokenize(text: str) -> list[str]:
         and whitespace. Matches tokenization scheme of reference frequency corpus.
 
     Example:
-        >>> tokenize("State-of-the-art tokenization.")
+        >>> split_words("State-of-the-art tokenization.")
         ['State', 'of', 'the', 'art', 'tokenization']
     """
     tokenizer = RegexpTokenizer(r'\b[\w-]+\b')
@@ -54,7 +56,7 @@ def tokenize_and_clean(
 
     Processing Steps:
     1. Case normalization to lowercase
-    2. Tokenization preserving meaningful hyphens
+    2. Breaking wirds into hyphenated compounds
     3. Removal of stopwords, punctuation, and numeric tokens
     4. Lemmatization to canonical dictionary forms
 
@@ -71,7 +73,7 @@ def tokenize_and_clean(
         ['quick', 'fox', 'jump']
     """
     text = text.lower()
-    tokens = tokenize(text)
+    tokens = split_words(text)
     return [
         lemmatizer.lemmatize(token) for token in tokens
         if token not in stop_words
@@ -129,7 +131,8 @@ def calculate_vocabulary_complexity(
         Formula: Σ(1 / frequency_count) for each recognized word
 
     Note:
-        Unrecognized words (missing from freq_df) contribute 0 to the score
+        Unrecognized words (missing from freq_df) contribute 0 to the score. 
+        Most unrecognized words represent either numbers or gibberish.
     """
     complexity = 0.0
     for word in words:
@@ -218,7 +221,7 @@ def create_gephi_tables(
 
 def create_tfidf_matrix(
     total_words: int, 
-    num_docs: int, 
+    number_documents: int, 
     corpus: list[list[list[str]]]
 ) -> np.ndarray:
     """
@@ -226,19 +229,19 @@ def create_tfidf_matrix(
 
     Args:
         total_words (int): Size of combined vocabulary
-        num_docs (int): Number of documents in corpus
+        number_documents (int): Number of documents in corpus
         corpus (list): Tokenized document collection
 
     Returns:
         np.ndarray: TF-IDF matrix with shape (vocab_size, num_docs)
     """
-    tfidf_matrix = np.zeros((len(total_words), num_docs))
+    tfidf_matrix = np.zeros((len(total_words), number_documents))
 
     for word_idx, word in enumerate(total_words):
         df = sum(1 for doc in corpus if word in doc)
-        idf = np.log((num_docs + 1) / (df + 1)) + 1  # Scikit-learn's IDF formula
+        idf = np.log((number_documents + 1) / (df + 1)) + 1  # Scikit-learn's IDF formula
         
-        for doc_idx in range(num_docs):
+        for doc_idx in range(number_documents):
             tf = corpus[doc_idx].count(word)
             tfidf_matrix[word_idx, doc_idx] = tf * idf
 
@@ -247,19 +250,19 @@ def create_tfidf_matrix(
 
 def L2_normalization(
     tfidf_matrix: np.ndarray, 
-    num_docs: int
+    number_of_documents: int
 ) -> np.ndarray:
     """
     Applies L2 normalization to TF-IDF document vectors.
 
     Args:
         tfidf_matrix (np.ndarray): Input TF-IDF matrix
-        num_docs (int): Number of documents (matrix rows)
+        number_of_documents (int): Number of documents (matrix rows)
 
     Returns:
         np.ndarray: Normalized matrix where each document vector has unit length
     """
-    for doc_idx in range(num_docs):
+    for doc_idx in range(number_of_documents):
         norm = np.linalg.norm(tfidf_matrix[doc_idx])
         if norm != 0:
             tfidf_matrix[doc_idx] /= norm
@@ -268,29 +271,30 @@ def L2_normalization(
 
 def compute_dot_product(
     tfidf_matrix: np.ndarray, 
-    num_docs: int
+    number_of_documents: int
 ) -> np.ndarray:
     """
     Computes pairwise cosine similarity using normalized dot products.
 
     Args:
         tfidf_matrix (np.ndarray): L2-normalized TF-IDF matrix
-        num_docs (int): Number of documents
+        number_of_documents (int): Number of documents
 
     Returns:
         np.ndarray: Square similarity matrix with pairwise cosine scores
     """
-    similarity_matrix = np.zeros((num_docs, num_docs))
-    for i in range(num_docs):
-        for j in range(num_docs):
+    similarity_matrix = np.zeros((number_of_documents, number_of_documents))
+    for i in range(number_of_documents):
+        for j in range(number_of_documents):
             similarity_matrix[i, j] = np.dot(tfidf_matrix[i], tfidf_matrix[j])
+
     return similarity_matrix
 
 
 def cosine_similarity_matrix(
     corpus: list[list[list[str]]], 
     total_words: set, 
-    num_docs: int
+    number_of_documents: int
 ) -> np.ndarray:
     """
     Computes document similarity matrix using TF-IDF and cosine distance.
@@ -304,15 +308,19 @@ def cosine_similarity_matrix(
     Args:
         corpus (list): Tokenized document collection
         total_words (set): Complete vocabulary across documents
-        num_docs (int): Number of documents to analyze
+        number_of_documents (int): Number of documents to analyze
 
     Returns:
         np.ndarray: Symmetric cosine similarity matrix (shape: num_docs x num_docs)
     """
-    tfidf_matrix = create_tfidf_matrix(total_words, num_docs, corpus)
-    tfidf_matrix = tfidf_matrix.T  # Transpose to document-term format
-    tfidf_matrix = L2_normalization(tfidf_matrix, num_docs)
-    return compute_dot_product(tfidf_matrix, num_docs)
+    tfidf_matrix = create_tfidf_matrix(total_words, number_of_documents, corpus)
+
+    # Transpose to document-term format for L2 normalization and dot product calculations
+    tfidf_matrix = tfidf_matrix.T  
+
+    tfidf_matrix = L2_normalization(tfidf_matrix, number_of_documents)
+    
+    return compute_dot_product(tfidf_matrix, number_of_documents)
 
 
 def scrape_presidential_rankings(headers: dict = HEADERS) -> pd.DataFrame:
