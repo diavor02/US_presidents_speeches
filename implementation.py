@@ -23,11 +23,7 @@ stop_words = set(stopwords.words('english'))  # Standard English stopwords from 
 lemmatizer = WordNetLemmatizer()  # WordNet-based lemmatization instance
 
 # Load lexical frequency data (Google Web Corpus subset)
-try:
-    df_freq = pd.read_csv(WORD_FREQUENCY_FILE)
-except FileNotFoundError:
-    raise SystemExit(f"Critical Error: Required word frequency file '{WORD_FREQUENCY_FILE}' not found.")
-
+df_freq = pd.read_csv(WORD_FREQUENCY_FILE)
 
 def tokenize(text: str) -> list[str]:
     """
