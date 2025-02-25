@@ -98,13 +98,13 @@ This project analyzes U.S. presidential inaugural speeches by scraping them from
 <h4>Main takeaways:</h4>
 <ul>
     <li>
-        The speeches are clearly clustered based on their date of delivery. 
+        The speeches exhibit a clear clustering pattern according to their delivery date. 
     </li>
     <li>
         Two main clusters emerge: 1789 - 1933 and 1961 - present
     </li>
     <li>
-        The inaugural speeches of the U.S. presidents who served during military involvement in the World Wars—Woodrow Wilson, Franklin D. Roosevelt, and Harry S. Truman—do not neatly fit into either of the established clusters. This is likely due to the different nature of their addresses. 
+        The speeches from World War-era presidents (Wilson, Roosevelt, and Truman) don't align with established inaugural address patterns, likely reflecting their unique wartime contexts.
     </li>
     <li>
         List of unique speeches (had a cosine similarity lower than 0.25 with any other inaugural address, and thus are not part of the graph):
