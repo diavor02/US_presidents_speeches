@@ -137,8 +137,10 @@ def calculate_vocabulary_complexity(
     complexity = 0.0
     for word in words:
         freq = freq_df.loc[freq_df['word'] == word, 'count']
-        if not freq.empty and (count := int(freq.iloc[0])) > 0:
-            complexity += 1 / count
+        if not freq.empty:
+            count = int(freq.iloc[0])
+            if count > 0:
+                complexity += 1 / count
     return complexity
 
 
