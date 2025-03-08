@@ -19,7 +19,7 @@ HEADERS = {
 }
 
 # NLP Initialization
-stop_words = set(stopwords.words('english'))  # Standard English stopwords from NLTK
+stop_words = set(stopwords.words('english')) 
 lemmatizer = WordNetLemmatizer()  # WordNet-based lemmatization instance
 
 # Load lexical frequency data (Google Web Corpus subset)
